@@ -1,0 +1,184 @@
+/* ============================================================================
+   GLUT Online Runner - Minimal, Clean & Professional Dark Theme
+   No slop, no excessive decorations, fast and distraction-free
+   ============================================================================ */
+
+:root {
+  --bg-app: #0e1117;
+  --bg-panel: #161b22;
+  --bg-editor: #0d1117;
+  --bg-terminal: #090d13;
+  --border-ui: #21262d;
+  --border-focus: #388bfd;
+
+  --text-main: #f0f6fc;
+  --text-dim: #8b949e;
+  --text-muted: #6e7681;
+
+  --color-green: #238636;
+  --color-green-hover: #2ea043;
+  --color-red: #da3633;
+  --color-blue: #1f6feb;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: "Fira Code", "JetBrains Mono", Consolas, "Courier New", monospace;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  height: 100vh;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-app);
+}
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #484f58;
+}
+
+/* Main Container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background: var(--bg-app);
+}
+
+/* Minimal Top Bar */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 48px;
+  padding: 0 16px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-ui);
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.logo-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  color: #fff;
+}
+
+/* Workspace Split */
+.workspace-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+@media (max-width: 960px) {
+  .workspace-grid {
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr 1fr;
+  }
+}
+
+/* Editor Section */
+.editor-pane {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border-right: 1px solid var(--border-ui);
+  background: var(--bg-editor);
+  overflow: hidden;
+}
+
+/* Right Section: Canvas + Console */
+.preview-pane {
+  display: grid;
+  grid-template-rows: 1fr 180px;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--bg-app);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+
+.btn-run {
+  background: var(--color-green);
+  color: #ffffff;
+}
+.btn-run:hover {
+  background: var(--color-green-hover);
+}
+
+.btn-secondary {
+  background: #21262d;
+  color: var(--text-main);
+  border-color: rgba(240, 246, 252, 0.1);
+}
+.btn-secondary:hover {
+  background: #30363d;
+  border-color: #8b949e;
+}
+
+.btn-stop {
+  background: rgba(218, 54, 51, 0.15);
+  color: #f85149;
+  border-color: rgba(218, 54, 51, 0.4);
+}
+.btn-stop:hover {
+  background: rgba(218, 54, 51, 0.3);
+}
+
+/* Select element */
+.select-input {
+  background: #21262d;
+  color: var(--text-main);
+  border: 1px solid var(--border-ui);
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  outline: none;
+  cursor: pointer;
+}
+.select-input:focus {
+  border-color: var(--border-focus);
+}
