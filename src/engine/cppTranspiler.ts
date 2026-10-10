@@ -98,24 +98,27 @@ export class CppGlutTranspiler {
       code = code.replace(/(\b\d+\.?\d*|\.\d+)[fF]\b/g, "$1");
 
       // 8. Strip C-style casts: (float)x, (int)x, (GLfloat)x -> clean no-op
-      code = code.replace(/\((float|double|int|long|short|unsigned int|GLfloat|GLint)\)\s*/g, "");
+      // Ensure we do NOT strip parameter lists like (int) in void update(int) or (int, int)
+      code = code.replace(/\((float|double|int|long|short|unsigned int|GLfloat|GLint)\)(?!\s*[,;{})])/g, "");
       code = code.replace(/\b(float|double|int|long|short|unsigned|GLfloat|GLint)\s*\(([^)]+)\)/g, "Number($2)");
 
       // 9. Math functions & std::max / std::min
       code = code.replace(/\bstd::max\s*\(/g, "Math.max(");
       code = code.replace(/\bstd::min\s*\(/g, "Math.min(");
       code = code.replace(/\bstd::abs\s*\(/g, "Math.abs(");
+      code = code.replace(/\bfmodf?\s*\(/g, "fmod(");
+      code = code.replace(/\bfabsf?\s*\(/g, "Math.abs(");
 
       const mathFuncs = [
         "sin", "cos", "tan", "asin", "acos", "atan", "atan2",
-        "sqrt", "pow", "abs", "floor", "ceil", "round", "min", "max"
+        "sqrt", "pow", "abs", "floor", "ceil", "round", "min", "max",
+        "hypot", "exp", "log", "log10"
       ];
       for (const fn of mathFuncs) {
-        const regex = new RegExp(`(?<!Math\\.)\\b${fn}\\s*\\(`, "g");
+        const regex = new RegExp(`(?<!Math\\.)\\b${fn}f?\\s*\\(`, "g");
         code = code.replace(regex, `Math.${fn}(`);
       }
-      code = code.replace(/\bfabs\s*\(/g, "Math.abs(");
-      code = code.replace(/\b(M_PI|PI)\b/g, "Math.PI");
+      code = code.replace(/(?<!\b(?:var|const|float|double)\s+)M_PI\b/g, "Math.PI");
 
       // 10. Replace (void) in parameter lists -> ()
       code = code.replace(/\(\s*void\s*\)/g, "()");
@@ -124,18 +127,29 @@ export class CppGlutTranspiler {
       // Match (return_type) funcName (args) followed by {
       // Must NOT match control flow (if, while, for, else if, switch, catch) or non-types
       const reservedControl = /^(if|else|while|for|switch|catch)$/;
+      const knownTypes = new Set([
+        "void", "int", "float", "double", "bool", "char", "long", "short",
+        "unsigned", "signed", "auto", "size_t", "GLfloat", "GLint", "GLdouble",
+        "GLboolean", "GLenum", "GLvoid", "GLclampf", "GLubyte", "GLbyte", "GLuint",
+        "GLshort", "GLushort"
+      ]);
       code = code.replace(/^\s*(?:static\s+|extern\s+|inline\s+)?(?:void|int|float|double|bool|char|long|short|unsigned\s+int|unsigned\s+char|GLvoid|GLint|GLfloat|GLdouble|GLboolean|GLenum|auto|[A-Za-z0-9_]+)\s+([A-Za-z0-9_]+)\s*\(([^)]*)\)(\s*)\{/gm, (match, funcName, args, ws) => {
         if (reservedControl.test(funcName) || /^\s*(?:else|return|case|break)\b/.test(match)) {
           return match;
         }
         const cleanArgs = args
           .split(",")
-          .map((a: string) => {
+          .map((a: string, idx: number) => {
             const cleaned = a.trim().replace(/[*&[\]]/g, "").trim();
+            if (!cleaned || cleaned === "void") return "";
             const tokens = cleaned.split(/\s+/);
-            return tokens[tokens.length - 1] || "";
+            const lastToken = tokens[tokens.length - 1];
+            if (knownTypes.has(lastToken)) {
+              return `_arg${idx}`;
+            }
+            return lastToken || `_arg${idx}`;
           })
-          .filter((a: string) => a.length > 0 && a !== "void")
+          .filter((a: string) => a.length > 0)
           .join(", ");
         return `function ${funcName}(${cleanArgs})${ws}{`;
       });
@@ -150,7 +164,8 @@ export class CppGlutTranspiler {
       ];
       const typeRegex = new RegExp(`\\b(${typeList.join("|")})\\s+`, "g");
       code = code.replace(typeRegex, "var ");
-      code = code.replace(/\bconst\s+var\s+/g, "const ");
+      code = code.replace(/\bconst\s+var\s+/g, "var ");
+      code = code.replace(/\bconst\s+/g, "var ");
 
       // 13. Range-based for loop: for (var x : collection) -> for (var x of collection)
       code = code.replace(/for\s*\(\s*(?:var\s+)?([A-Za-z0-9_]+)\s*:\s*([^)]+)\)/g, "for (var $1 of $2)");
@@ -337,6 +352,46 @@ export class CppGlutTranspiler {
         GLUT_BITMAP_HELVETICA_10, GLUT_BITMAP_HELVETICA_12, GLUT_BITMAP_HELVETICA_18,
 
         // Standard C library math & utility globals
+        PI: Math.PI,
+        M_PI: Math.PI,
+        sin: Math.sin,
+        cos: Math.cos,
+        tan: Math.tan,
+        asin: Math.asin,
+        acos: Math.acos,
+        atan: Math.atan,
+        atan2: Math.atan2,
+        sqrt: Math.sqrt,
+        pow: Math.pow,
+        abs: Math.abs,
+        fabs: Math.abs,
+        floor: Math.floor,
+        ceil: Math.ceil,
+        round: Math.round,
+        hypot: Math.hypot,
+        exp: Math.exp,
+        log: Math.log,
+        log10: Math.log10,
+        sinf: Math.sin,
+        cosf: Math.cos,
+        tanf: Math.tan,
+        asinf: Math.asin,
+        acosf: Math.acos,
+        atanf: Math.atan,
+        atan2f: Math.atan2,
+        sqrtf: Math.sqrt,
+        powf: Math.pow,
+        absf: Math.abs,
+        fabsf: Math.abs,
+        floorf: Math.floor,
+        ceilf: Math.ceil,
+        roundf: Math.round,
+        hypotf: Math.hypot,
+        expf: Math.exp,
+        logf: Math.log,
+        log10f: Math.log10,
+        fmod: (a: number, b: number) => a % b,
+        fmodf: (a: number, b: number) => a % b,
         rand: () => Math.floor(Math.random() * 32767),
         srand: () => {},
         time: () => Math.floor(Date.now() / 1000),

@@ -535,9 +535,9 @@ export class GlutEngine {
         this.specialFunc(specialKey, 0, 0);
         handled = true;
       } else if (this.keyboardFunc) {
-        let keyChar = e.key;
-        if (e.key === "Escape") keyChar = String.fromCharCode(27);
-        else if (e.key === "Enter") keyChar = "\r";
+        let keyChar: any = e.key;
+        if (e.key === "Escape") keyChar = 27;
+        else if (e.key === "Enter") keyChar = 13;
         else if (e.key === " ") keyChar = " ";
         else if (e.key.length === 1) keyChar = e.key;
 
@@ -590,7 +590,10 @@ export class GlutEngine {
 
   public triggerKey(keyStr: string) {
     if (this.keyboardFunc) {
-      this.keyboardFunc(keyStr, 0, 0);
+      let k: any = keyStr;
+      if (keyStr === "Escape") k = 27;
+      else if (keyStr === "Enter") k = 13;
+      this.keyboardFunc(k, 0, 0);
     }
   }
 
